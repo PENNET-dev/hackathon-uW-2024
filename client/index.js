@@ -1,15 +1,10 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
 
-// Read the WAV file and convert it to base64
-const wavFile = fs.readFileSync('../wilderness2.wav');
-const base64Wav = wavFile.toString('base64');
-
 // Define the request body
 const body = {
-    search_audio_data: base64Wav,
-    search_sample_rate: 16000,  // Replace with your actual sample rate
-    target_file_path: 'wilderness1.wav'
+    search_audio_data: fs.readFileSync('../wilderness1.wav').toString('base64'),
+    target_file_path: 'God1.wav'
 };
 
 // Make the POST request

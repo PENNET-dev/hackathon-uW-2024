@@ -124,10 +124,10 @@ def calc_plot_mfcc_features(audio,
 
 
 # Load audio file
-def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
+def load_audio(audioSampleFilePath):
     assert os.path.isfile(audioSampleFilePath), f"No file at {audioSampleFilePath}"
     print(os.path.getsize(audioSampleFilePath))
-    data, sample_rate = librosa.load(audioSampleFilePath)
+    data, sample_rate = librosa.load(audioSampleFilePath, sr=None)
     return data, sample_rate
 
 
@@ -162,6 +162,7 @@ def compute_similarity_api(search_audio_data, search_sample_rate, target_file_pa
                         figsize = (8,4),
                         title=target_file_path
     )
+    print("Loading", filePrefix + target_file_path)
     target_audio_data, sample_rate = load_audio(filePrefix + target_file_path)
     target_features = calc_plot_mfcc_features(
                         target_audio_data,
@@ -181,9 +182,9 @@ def compute_similarity_api(search_audio_data, search_sample_rate, target_file_pa
     return similarity
 
 
-search_audio_path = "wilderness2.wav"
+search_audio_path = "God1.wav"
 search_audio_data, search_sample_rate = load_audio(search_audio_path)
-target_audio_path = "wilderness1.wav"
+target_audio_path = "God1.wav"
 similarity = compute_similarity_api(search_audio_data, search_sample_rate, target_audio_path)
 
 
