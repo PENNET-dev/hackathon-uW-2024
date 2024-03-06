@@ -63,7 +63,7 @@ filePaths = ['God1.wav', 'God2.wav',
 # Add file prefix to each file path:
 files = [filePrefix + path for path in filePaths]
 
-target_file_path = 'jesus2.wav'
+target_file_path = 'wilderness1.wav'
 similarities = compute_similarities1(files, target_file_path)
 print(similarities)
 
