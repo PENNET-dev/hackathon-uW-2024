@@ -1,21 +1,80 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import Avatar from '@mui/material/Avatar'
+import { useEffect } from 'react'
+import { PlayArrow, Stop } from '@mui/icons-material'
 
 function App() {
   const [count, setCount] = useState(0)
 
-  // checkKeywords function: POST the audio file to the server and get the results
+  const [recording, setRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [hasAudio, setHasAudio] = useState(false); // New state variable
+  const [audio, setAudio] = useState(null); // New state variable
+  let chunks = [];
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const _MediaRecorder = new MediaRecorder(stream);
+        _MediaRecorder.ondataavailable = function (e) {
+          chunks.push(e.data);
+        }
+        _MediaRecorder.onstop = function (e) {
+          let blob = new Blob(chunks); //, { 'type': 'audio/ogg; codecs=opus' });
+          let audioURL = URL.createObjectURL(blob);
+          console.log(audioURL);
+          // Now you can use audioURL for audio source or you can read it as bytes using FileReader
+          let reader = new FileReader();
+          reader.onloadend = function () {
+            console.log("setAudio", reader.result); // This is your file bytes
+            setAudio(reader.result);
+          }
+          reader.readAsArrayBuffer(blob);
+        }
+
+        setMediaRecorder(_MediaRecorder);
+      });
+  }, []);
+
+  const startRecording = () => {
+    mediaRecorder.start();
+    setRecording(true);
+    setHasAudio(false);
+  };
+
+  const stopRecording = () => {
+    mediaRecorder.stop();
+    setRecording(false);
+    setHasAudio(true);
+  };
+
+  // useState for results, default null
+  const [results, setResults] = useState(null)
+
+  // function formatPercentage() to format as 4 digit percentage:
+  const formatPercentage = (value) => {
+    if (value === null) {
+      return null;
+    }
+    return `${(value * 100).toFixed(4)}%`
+  }
+
   const checkKeywords = async () => {
-    // Get the audio file from the form
-    const audio = document.getElementById('audio').files[0]
     // Get the target from the radio buttons
     const target = document.querySelector('input[name="target"]:checked').value
 
+    const _arrayBuffer = audio;
+    // _arrayBuffer is ArrayBuffer; convert it to base64
+    const _bytes = new Uint8Array(_arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < _bytes.byteLength; i++) {
+      binary += String.fromCharCode(_bytes[i]);
+    }
+    const base64String = window.btoa(binary);
+
     // Define the request body
     const body = {
-      search_audio_data: audio,
+      search_audio_data: base64String,
       target_file_path: 'God1.wav'
     };
 
@@ -26,7 +85,9 @@ function App() {
       headers: { 'Content-Type': 'application/json' },
     })
       .then(response => response.text())
-      .then(data => alert(data))
+      .then(data =>
+        setResults(data)
+      )
       .catch(error => console.error('Error:', error));
   }
 
@@ -44,8 +105,32 @@ function App() {
       </header>
       <main>
         <label htmlFor="audio">Upload Audio</label>
-        <input type="file" id="audio" name="audio" accept=".wav" />
-        <button type="submit" onClick={checkKeywords}>Search</button>
+
+        <div>
+          <button onClick={startRecording} disabled={recording}>
+            <PlayArrow />
+          </button>
+          <button onClick={stopRecording} disabled={!recording}>
+            <Stop />
+          </button>
+        </div>
+        {recording &&
+          <div>
+            {/* Show red rectangle with white border that reads "Recording" */}
+            <div style={{
+              width: '100px',
+              height: '50px',
+              backgroundColor: 'red',
+              border: '2px solid white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              Recording
+            </div>
+          </div>}
+
+        <button type="submit" onClick={checkKeywords} disabled={!hasAudio}>Search</button>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <input type="radio" id="target1" name="target" value="target1" style={{ width: '1in', height: '1in' }} />
@@ -69,8 +154,17 @@ function App() {
           </div>
         </div>
         <div>
-          <img src={reactLogo} className="App-logo" alt="reactLogo" />
-          <p>Results: 100%</p>
+          {Boolean(results) && results >= 0.4 && <>
+            {/* Add green checkmark emoji inside of Avatar */}
+            <Avatar sx={{ bgcolor: 'green' }}>✔</Avatar>
+          </>}
+          {Boolean(results) && results < 0.4 && <>
+            {/* Add red X emoji inside of Avatar */}
+            <Avatar sx={{ bgcolor: 'red' }}>✖</Avatar>
+          </>}
+        </div>
+        <div>
+          <p>Results: {formatPercentage(results)}</p>
         </div>
       </main>
     </div>

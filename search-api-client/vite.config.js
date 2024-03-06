@@ -5,9 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
 
-  // Automatically start browser
-  open: true,
-  
   // Bind to all addresses:
   server: {
     host: true,
