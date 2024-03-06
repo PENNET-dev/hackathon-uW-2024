@@ -134,22 +134,23 @@ def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
 
 # --- --- ---
 
-filePrefix = "/content/drive/MyDrive/Colab Notebooks/2024 - unfoldingWord Hackathon/"
+# filePrefix = "/content/drive/MyDrive/Colab Notebooks/2024 - unfoldingWord Hackathon/"
 filePrefix = ""
-filePaths = ['God1.wav', 'God2.wav', 
-         'inTheBeginning1.wav', 'inTheBeginning2.wav', 
-         'jesus1.wav', 'jesus2.wav', 
-         'wilderness1.wav', 'wilderness2.wav']
 
-target_file_path = 'wilderness1.wav'
+def compute_similarity(search_vectors, target_vectors):
+    # search_vectors and target_vectors are arrays. Pad to make same length
+    if len(search_vectors) > len(target_vectors):
+        target_vectors = np.pad(target_vectors, (0, len(search_vectors) - len(target_vectors)))
+    elif len(search_vectors) < len(target_vectors):
+        search_vectors = np.pad(search_vectors, (0, len(target_vectors) - len(search_vectors)))
+    
+    similarity = (1 - cosine(target_vectors, search_vectors) )
+    return similarity
 
-# Loop filePaths calling calc_plot_mfcc_features for each filePath:
-features = {}
-for filePath in filePaths:
-    audio_data, sample_rate = load_audio(filePrefix + filePath)
-    features[filePath] = calc_plot_mfcc_features(
-                        audio_data,
-                        sample_rate,
+def compute_similarity_api(search_audio_data, search_sample_rate, target_file_path):
+    search_features = calc_plot_mfcc_features(
+                        search_audio_data,
+                        search_sample_rate,
                         alpha = 0.97,
                         NFFT=512,
                         low_freq_cut=10,
@@ -159,11 +160,10 @@ for filePath in filePaths:
                         frame_stride=0.02,
                         num_ceps = 13,
                         figsize = (8,4),
-                        title=filePath
+                        title=target_file_path
     )
-    
-target_audio_data, sample_rate = load_audio(filePrefix + target_file_path)
-target_features = calc_plot_mfcc_features(
+    target_audio_data, sample_rate = load_audio(filePrefix + target_file_path)
+    target_features = calc_plot_mfcc_features(
                         target_audio_data,
                         sample_rate,
                         alpha = 0.97,
@@ -177,38 +177,16 @@ target_features = calc_plot_mfcc_features(
                         figsize = (8,4),
                         title=target_file_path
     )
+    similarity = compute_similarity(search_features, target_features)
+    return similarity
 
-# mfcc_vectors is a DICTIONARY like this: {'filename': [feature_vector]}
-# target_vectors are the feature vectors of the target file
-def compute_similarities(mfcc_vectors, target_vectors):
-    if (len(mfcc_vectors) > len(target_vectors)):
-        np.append(target_vectors, np.zeros(len(mfcc_vectors) - len(target_vectors)))
-    elif (len(mfcc_vectors) < len(target_vectors)):
-        np.append(mfcc_vectors, np.zeros(len(target_vectors) - len(mfcc_vectors)))
-    print(mfcc_vectors, target_vectors)
-    
-    # mfcc_vectors is an array of feature vectors; find the max length of the feature vectors:
-    maxLength = max([len(vec) for vec in mfcc_vectors])
-    
-    # Pad the feature vectors to the max length:
-    mfcc_vectors = [np.pad(vec, (0, maxLength - len(vec))) for vec in mfcc_vectors]
-    # Pad target_vectors if necessary, frst checking for length of target_vectors:
-    if len(target_vectors) < maxLength:
-        target_vectors = np.pad(target_vectors, (0, maxLength - len(target_vectors)))
-    
-    similarities = [1 - cosine(target_vectors, vec2) for vec2 in mfcc_vectors]
-    # Loop through filepaths by index and associate the same index from similarities dictionary
-    namedSimilarities = {filePaths[i]: similarities[i] for i in range(len(filePaths))}
-    # Sort by descending similarity:
-    namedSimilarities = dict(sorted(namedSimilarities.items(), key=lambda item: item[1], reverse=True))
-    return namedSimilarities
 
-similarities = compute_similarities(features.values(), target_features)
-print(similarities)
+search_audio_path = "wilderness2.wav"
+search_audio_data, search_sample_rate = load_audio(search_audio_path)
+target_audio_path = "wilderness1.wav"
+similarity = compute_similarity_api(search_audio_data, search_sample_rate, target_audio_path)
+
 
 print()
 print()
-print("Similar to " + target_file_path + ":")
-# Print similarities in this format: "filename: similarity
-for key, value in similarities.items():
-    print(f"{key}: {value}")
+print("Similar to " + search_audio_path + ": " + str(similarity))
