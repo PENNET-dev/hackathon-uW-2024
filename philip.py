@@ -6,7 +6,7 @@ import librosa
 import soundfile as sf
 import os
 from scipy.spatial.distance import cosine
-
+import noisereduce as nr
 
 def calc_plot_mfcc_features(audio,
                              sample_rate,
@@ -19,7 +19,7 @@ def calc_plot_mfcc_features(audio,
                              frame_stride=0.02,
                              num_ceps=13,
                              figsize=(10, 5),
-                             title= 'In The Beginning 01'
+                             title= ''
                              ):
 
     # Pre-emphasis
@@ -111,16 +111,18 @@ def calc_plot_mfcc_features(audio,
     plt.ylabel('Filter Index')
     plt.title(title+' - Mel Filter Banks')
 
-    # Plotting the MFCC
-    plt.figure(figsize=figsize)
-    plt.imshow(mfcc, cmap='coolwarm', origin='lower', aspect='auto', extent=[0, 49, 1, 13])
-    plt.colorbar(label='Coefficient Value')
-    plt.xlabel('Frame Index')
-    plt.ylabel('MFCC Coefficient Index')
-    plt.title(title+' - MFCC')
-    # plt.show()
+    # # Plotting the MFCC
+    # plt.figure(figsize=figsize)
+    # plt.imshow(mfcc, cmap='coolwarm', origin='lower', aspect='auto', extent=[0, 49, 1, 13])
+    # plt.colorbar(label='Coefficient Value')
+    # plt.xlabel('Frame Index')
+    # plt.ylabel('MFCC Coefficient Index')
+    # plt.title(title+' - MFCC')
+    # # plt.show()
+    # plt.close()
 
-    return processed_features
+    # We only look at 20 MFCC coefficients:
+    return processed_features[:40]
 
 
 # Load audio file
@@ -128,6 +130,13 @@ def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
     assert os.path.isfile(audioSampleFilePath), f"No file at {audioSampleFilePath}"
     print(os.path.getsize(audioSampleFilePath))
     data, sample_rate = librosa.load(audioSampleFilePath)
+    # Trim
+    data, _ = librosa.effects.trim(data)
+    # Remove noise floor
+    data = nr.reduce_noise(y=data, sr=sample_rate)
+    # Normalize signal
+    data = librosa.util.normalize(data)
+    
     return data, sample_rate
 
 
@@ -136,18 +145,18 @@ def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
 
 filePrefix = "/content/drive/MyDrive/Colab Notebooks/2024 - unfoldingWord Hackathon/"
 filePrefix = ""
-filePaths = ['God1.wav', 'God2.wav', 'God3.wav',
+filePaths = ['God1.wav', 'God2.wav', 'God3.wav', 'God4.wav',
          'inTheBeginning1.wav', 'inTheBeginning2.wav', 
          'jesus1.wav', 'jesus2.wav', 
          'wilderness1.wav', 'wilderness2.wav']
 
-target_file_path = 'God3.wav'
+target_file_path = 'God4.wav'
 
 # Loop filePaths calling calc_plot_mfcc_features for each filePath:
 features = []
 for filePath in filePaths:
     audio_data, sample_rate = load_audio(filePrefix + filePath)
-    features.append(calc_plot_mfcc_features(
+    current_mfcc = calc_plot_mfcc_features(
                         audio_data,
                         sample_rate,
                         alpha = 0.97,
@@ -159,8 +168,9 @@ for filePath in filePaths:
                         frame_stride=0.02,
                         num_ceps = 13,
                         figsize = (8,4),
-                        title=filePath
-    ))
+                        title=filePath)
+    print(filePath, "Len = ", len(current_mfcc))
+    features.append(current_mfcc)
     
     
 target_audio_data, sample_rate = load_audio(filePrefix + target_file_path)

@@ -51,8 +51,9 @@ function App() {
         resolve(base64data);
       };
       reader.onerror = reject;
+      console.log("audioBlob", audioBlob);
       reader.readAsDataURL(audioBlob);
-        })
+    })
       .then(base64data => {
         console.log(base64data);
         // Get the target from the radio buttons
@@ -91,24 +92,19 @@ function App() {
         Keyword checker
       </header>
       <main>
-        <label htmlFor="audio">Upload Audio</label>
-
-        <div>
+        <div className="recorder-container">
           <AudioRecorder
             onRecordingComplete={addAudioElement}
             audioTrackConstraints={{
               noiseSuppression: true,
               echoCancellation: true,
+              autoGainControl: true,
+              channelCount: 1,
+              sampleRate: 16000,
             }}
             downloadOnSavePress={true}
             downloadFileExtension="webm"
           />
-          <button onClick={startRecording} disabled={recording}>
-            <PlayArrow />
-          </button>
-          <button onClick={stopRecording} disabled={!recording}>
-            <Stop />
-          </button>
         </div>
         {recording &&
           <div>
@@ -127,36 +123,37 @@ function App() {
           </div>}
 
 
-        <input type="file" id="audio" name="audio" accept=".wav,.mp3" />
-        <button type="submit" onClick={checkKeywords}>Search</button>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target1" name="target" value="target1" style={{ width: '1in', height: '1in' }} />
-            <label htmlFor="target1">Target 1</label>
+            <input type="radio" id="target1" name="target" value="target1" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target1">Beginning</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target2" name="target" value="target2" style={{ width: '1in', height: '1in' }} />
-            <label htmlFor="target2">Target 2</label>
+            <input type="radio" id="target2" name="target" value="target2" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target2">God</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target3" name="target" value="target3" style={{ width: '1in', height: '1in' }} />
-            <label htmlFor="target3">Target 3</label>
+            <input type="radio" id="target3" name="target" value="target3" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target3">Jesus</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target4" name="target" value="target4" style={{ width: '1in', height: '1in' }} />
-            <label htmlFor="target4">Target 4</label>
+            <input type="radio" id="target4" name="target" value="target4" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target4">Wilderness</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target5" name="target" value="target5" style={{ width: '1in', height: '1in' }} />
-            <label htmlFor="target5">Target 5</label>
+            <input type="radio" id="target5" name="target" value="target5" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target5">Word</label>
           </div>
         </div>
-        <div>
-          {Boolean(results) && results >= 0.4 && <>
+        <div className="centeredFlexbox" style={{paddingTop: "1rem"}}>
+          <button type="submit" onClick={checkKeywords}>Search</button>
+        </div>
+        <div className="centeredFlexbox">
+          {Boolean(results) && results >= 0.65 && <>
             {/* Add green checkmark emoji inside of Avatar */}
             <Avatar sx={{ bgcolor: 'green' }}>✔</Avatar>
           </>}
-          {Boolean(results) && results < 0.4 && <>
+          {Boolean(results) && results < 0.65 && <>
             {/* Add red X emoji inside of Avatar */}
             <Avatar sx={{ bgcolor: 'red' }}>✖</Avatar>
           </>}

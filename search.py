@@ -6,6 +6,7 @@ import librosa
 import soundfile as sf
 import os
 from scipy.spatial.distance import cosine
+import noisereduce as nr
 
 
 def calc_plot_mfcc_features(audio,
@@ -120,14 +121,21 @@ def calc_plot_mfcc_features(audio,
     plt.title(title+' - MFCC')
     # plt.show()
 
-    return processed_features
+    return processed_features[:20]
 
 
 # Load audio file
-def load_audio(audioSampleFilePath):
+def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
     assert os.path.isfile(audioSampleFilePath), f"No file at {audioSampleFilePath}"
     print(os.path.getsize(audioSampleFilePath))
-    data, sample_rate = librosa.load(audioSampleFilePath, sr=None)
+    data, sample_rate = librosa.load(audioSampleFilePath)
+    # Trim
+    data, _ = librosa.effects.trim(data)
+    # Remove noise floor
+    data = nr.reduce_noise(y=data, sr=sample_rate)
+    # Normalize signal
+    data = librosa.util.normalize(data)
+    
     return data, sample_rate
 
 
@@ -178,6 +186,7 @@ def compute_similarity_api(search_audio_data, search_sample_rate, target_file_pa
                         figsize = (8,4),
                         title=target_file_path
     )
+    print("Vector lengths", len(search_features), len(target_features))
     similarity = compute_similarity(search_features, target_features)
     return similarity
 

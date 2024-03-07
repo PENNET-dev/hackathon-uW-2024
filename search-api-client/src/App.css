@@ -1,0 +1,31 @@
+/*
+.audio-recorder-mic
+- 1in x 1in
+- inside elements are centered horizontally and vertically
+ */
+.audio-recorder {
+    width: 1in !important;
+    height: 1in;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.recorder-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.App-header {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.centeredFlexbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 1rem;
+}

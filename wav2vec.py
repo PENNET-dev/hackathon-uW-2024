@@ -22,6 +22,7 @@ from transformers import Wav2Vec2FeatureExtractor
 import librosa
 import soundfile as sf
 from scipy.spatial.distance import cosine
+import noisereduce as nr
 
 
 # # Use wav2vec package to extract features vectors from each wav:
@@ -44,6 +45,13 @@ def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
     assert os.path.isfile(audioSampleFilePath), f"No file at {audioSampleFilePath}"
     print(os.path.getsize(audioSampleFilePath))
     data, sample_rate = librosa.load(audioSampleFilePath)
+    # Trim
+    data, _ = librosa.effects.trim(data)
+    # Remove noise floor
+    data = nr.reduce_noise(y=data, sr=sample_rate)
+    # Normalize signal
+    data = librosa.util.normalize(data)
+    
     return data, sample_rate
 
 
