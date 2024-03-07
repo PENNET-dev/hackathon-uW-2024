@@ -181,9 +181,9 @@ def compute_similarity_api(search_audio_data, search_sample_rate, target_file_pa
     return similarity
 
 
-search_audio_path = "wilderness2.wav"
+search_audio_path = "God1.wav"
 search_audio_data, search_sample_rate = load_audio(search_audio_path)
-target_audio_path = "wilderness1.wav"
+target_audio_path = "God3.wav"
 similarity = compute_similarity_api(search_audio_data, search_sample_rate, target_audio_path)
 
 

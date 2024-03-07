@@ -12,25 +12,24 @@ from pydub import AudioSegment
 from pyogg import OpusFile
 from io import BytesIO
 import tempfile
+from pydub import AudioSegment
+import io
 
-def convert_ogg_to_wav(ogg_bytes):
-    # Write the bytes to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg", dir=".") as temp:
-        temp.write(ogg_bytes)
-        temp_name = temp.name
+from pydub import AudioSegment
+import tempfile
+import io
 
-    # Read the temporary file with OpusFile
-    opus = OpusFile(temp_name)
+def convert_webm_to_wav(file_bytes):
+    file_like_object = io.BytesIO(file_bytes)
+    sound = AudioSegment.from_file(file_like_object, format="webm")
+    
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False, dir=".") as tf:
+        temp_name = tf.name
+    
+    sound.export(temp_name, format="wav")
+    
+    return temp_name
 
-    # Convert the Opus file to a WAV file
-    audio = AudioSegment.from_file(BytesIO(opus.read()), format="opus")
-    out = BytesIO()
-    audio.export(out, format="wav")
-
-    # Delete the temporary file
-    os.remove(temp_name)
-
-    return out.getvalue()
 
 
 app = Flask(__name__)
@@ -54,7 +53,7 @@ def compute_similarities_api():
     # Decode base64 into Tuple[np.ndarray, float] using standard python libraries:
     search_audio_data = base64.b64decode(search_audio_data)
     search_audio_data = io.BytesIO(search_audio_data)
-    search_audio_data = convert_ogg_to_wav(search_audio_data.getvalue())
+    search_audio_data = convert_webm_to_wav(search_audio_data.getvalue())
     
     # Open the raw search_audio_data content with librosa (it is byte data not a file path)
     search_audio_data, search_sample_rate = librosa.load(search_audio_data, sr=None)

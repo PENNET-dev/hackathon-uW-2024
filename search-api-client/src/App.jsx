@@ -3,49 +3,30 @@ import './App.css'
 import Avatar from '@mui/material/Avatar'
 import { useEffect } from 'react'
 import { PlayArrow, Stop } from '@mui/icons-material'
+import { AudioRecorder } from 'react-audio-voice-recorder';
+
 
 function App() {
   const [count, setCount] = useState(0)
 
   const [recording, setRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [hasAudio, setHasAudio] = useState(false); // New state variable
-  const [audio, setAudio] = useState(null); // New state variable
-  let chunks = [];
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        const _MediaRecorder = new MediaRecorder(stream);
-        _MediaRecorder.ondataavailable = function (e) {
-          chunks.push(e.data);
-        }
-        _MediaRecorder.onstop = function (e) {
-          let blob = new Blob(chunks); //, { 'type': 'audio/ogg; codecs=opus' });
-          let audioURL = URL.createObjectURL(blob);
-          console.log(audioURL);
-          // Now you can use audioURL for audio source or you can read it as bytes using FileReader
-          let reader = new FileReader();
-          reader.onloadend = function () {
-            console.log("setAudio", reader.result); // This is your file bytes
-            setAudio(reader.result);
-          }
-          reader.readAsArrayBuffer(blob);
-        }
-
-        setMediaRecorder(_MediaRecorder);
-      });
-  }, []);
+  const [audioBlob, setAudioBlob] = useState(null);
 
   const startRecording = () => {
-    mediaRecorder.start();
     setRecording(true);
-    setHasAudio(false);
   };
 
   const stopRecording = () => {
-    mediaRecorder.stop();
     setRecording(false);
-    setHasAudio(true);
+  };
+
+  const addAudioElement = (blob) => {
+    const url = URL.createObjectURL(blob);
+    const audio = document.createElement("audio");
+    audio.src = url;
+    audio.controls = true;
+    // document.body.appendChild(audio);
+    setAudioBlob(blob);
   };
 
   // useState for results, default null
@@ -60,35 +41,41 @@ function App() {
   }
 
   const checkKeywords = async () => {
-    // Get the target from the radio buttons
-    const target = document.querySelector('input[name="target"]:checked').value
+    // Get the file from the audio input
+    const file = null;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // The result attribute contains the file's data as a base64 encoded string
+        let base64data = reader.result.split(',')[1]; // Split on comma to remove the Data URL declaration part
+        resolve(base64data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(audioBlob);
+        })
+      .then(base64data => {
+        console.log(base64data);
+        // Get the target from the radio buttons
+        const target = document.querySelector('input[name="target"]:checked').value
 
-    const _arrayBuffer = audio;
-    // _arrayBuffer is ArrayBuffer; convert it to base64
-    const _bytes = new Uint8Array(_arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < _bytes.byteLength; i++) {
-      binary += String.fromCharCode(_bytes[i]);
-    }
-    const base64String = window.btoa(binary);
+        // Define the request body
+        const body = {
+          search_audio_data: base64data,
+          target_file_path: 'God1.wav'
+        };
 
-    // Define the request body
-    const body = {
-      search_audio_data: base64String,
-      target_file_path: 'God1.wav'
-    };
-
-    // Make the POST request
-    fetch('http://192.168.86.27:5000/api/search', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then(response => response.text())
-      .then(data =>
-        setResults(data)
-      )
-      .catch(error => console.error('Error:', error));
+        // Make the POST request
+        fetch('http://192.168.86.27:5000/api/search', {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: { 'Content-Type': 'application/json' },
+        })
+          .then(response => response.text())
+          .then(data =>
+            setResults(data)
+          )
+          .catch(error => console.error('Error:', error));
+      });
   }
 
   // A simple react component with the following features:
@@ -107,6 +94,15 @@ function App() {
         <label htmlFor="audio">Upload Audio</label>
 
         <div>
+          <AudioRecorder
+            onRecordingComplete={addAudioElement}
+            audioTrackConstraints={{
+              noiseSuppression: true,
+              echoCancellation: true,
+            }}
+            downloadOnSavePress={true}
+            downloadFileExtension="webm"
+          />
           <button onClick={startRecording} disabled={recording}>
             <PlayArrow />
           </button>
@@ -130,7 +126,9 @@ function App() {
             </div>
           </div>}
 
-        <button type="submit" onClick={checkKeywords} disabled={!hasAudio}>Search</button>
+
+        <input type="file" id="audio" name="audio" accept=".wav,.mp3" />
+        <button type="submit" onClick={checkKeywords}>Search</button>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <input type="radio" id="target1" name="target" value="target1" style={{ width: '1in', height: '1in' }} />
