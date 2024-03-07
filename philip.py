@@ -136,18 +136,18 @@ def load_audio(audioSampleFilePath): #, sr=64000, duration=0.13):
 
 filePrefix = "/content/drive/MyDrive/Colab Notebooks/2024 - unfoldingWord Hackathon/"
 filePrefix = ""
-filePaths = ['God1.wav', 'God2.wav', 
+filePaths = ['God1.wav', 'God2.wav', 'God3.wav',
          'inTheBeginning1.wav', 'inTheBeginning2.wav', 
          'jesus1.wav', 'jesus2.wav', 
          'wilderness1.wav', 'wilderness2.wav']
 
-target_file_path = 'wilderness1.wav'
+target_file_path = 'God3.wav'
 
 # Loop filePaths calling calc_plot_mfcc_features for each filePath:
-features = {}
+features = []
 for filePath in filePaths:
     audio_data, sample_rate = load_audio(filePrefix + filePath)
-    features[filePath] = calc_plot_mfcc_features(
+    features.append(calc_plot_mfcc_features(
                         audio_data,
                         sample_rate,
                         alpha = 0.97,
@@ -160,7 +160,8 @@ for filePath in filePaths:
                         num_ceps = 13,
                         figsize = (8,4),
                         title=filePath
-    )
+    ))
+    
     
 target_audio_data, sample_rate = load_audio(filePrefix + target_file_path)
 target_features = calc_plot_mfcc_features(
@@ -180,30 +181,21 @@ target_features = calc_plot_mfcc_features(
 
 # mfcc_vectors is a DICTIONARY like this: {'filename': [feature_vector]}
 # target_vectors are the feature vectors of the target file
-def compute_similarities(mfcc_vectors, target_vectors):
-    if (len(mfcc_vectors) > len(target_vectors)):
-        np.append(target_vectors, np.zeros(len(mfcc_vectors) - len(target_vectors)))
-    elif (len(mfcc_vectors) < len(target_vectors)):
-        np.append(mfcc_vectors, np.zeros(len(target_vectors) - len(mfcc_vectors)))
-    print(mfcc_vectors, target_vectors)
-    
-    # mfcc_vectors is an array of feature vectors; find the max length of the feature vectors:
-    maxLength = max([len(vec) for vec in mfcc_vectors])
-    
+def compute_similarities(feature_vectors, target_vectors):
+    targetLength = len(target_vectors)
+    # Truncate feature vectors to the minimum length:
+    feature_vectors = [vec[:targetLength] for vec in feature_vectors]
     # Pad the feature vectors to the max length:
-    mfcc_vectors = [np.pad(vec, (0, maxLength - len(vec))) for vec in mfcc_vectors]
-    # Pad target_vectors if necessary, frst checking for length of target_vectors:
-    if len(target_vectors) < maxLength:
-        target_vectors = np.pad(target_vectors, (0, maxLength - len(target_vectors)))
+    feature_vectors = [np.pad(vec, (0, targetLength - len(vec))) for vec in feature_vectors]
     
-    similarities = [1 - cosine(target_vectors, vec2) for vec2 in mfcc_vectors]
+    similarities = [1 - cosine(target_vectors, vec2) for vec2 in feature_vectors]
     # Loop through filepaths by index and associate the same index from similarities dictionary
     namedSimilarities = {filePaths[i]: similarities[i] for i in range(len(filePaths))}
     # Sort by descending similarity:
     namedSimilarities = dict(sorted(namedSimilarities.items(), key=lambda item: item[1], reverse=True))
     return namedSimilarities
 
-similarities = compute_similarities(features.values(), target_features)
+similarities = compute_similarities(features, target_features)
 print(similarities)
 
 print()
