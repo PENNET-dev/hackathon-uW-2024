@@ -121,6 +121,7 @@ def calc_plot_mfcc_features(audio,
     plt.title(title+' - MFCC')
     # plt.show()
 
+    # Return top 20 MFCCs
     return processed_features[:20]
 
 
@@ -155,6 +156,73 @@ def compute_similarity(search_vectors, target_vectors):
     similarity = (1 - cosine(target_vectors, search_vectors) )
     return similarity
 
+
+# ---
+
+
+filePrefix = "/content/drive/MyDrive/Colab Notebooks/2024 - unfoldingWord Hackathon/"
+filePrefix = ""
+filePaths = ['God1.wav', #'God2.wav', 'God3.wav', 'God4.wav',
+         'inTheBeginning1.wav', #'inTheBeginning2.wav', 
+         'jesus1.wav', #'jesus2.wav', 
+         'wilderness1.wav', #'wilderness2.wav'
+         ]
+
+# Loop filePaths calling calc_plot_mfcc_features for each filePath:
+features = []
+for filePath in filePaths:
+    audio_data, sample_rate = load_audio(filePrefix + filePath)
+    current_mfcc = calc_plot_mfcc_features(
+                        audio_data,
+                        sample_rate,
+                        alpha = 0.97,
+                        NFFT=512,
+                        low_freq_cut=10,
+                        nfilt=32,
+                        noise_floor_dB=-100,
+                        frame_size=0.025,
+                        frame_stride=0.02,
+                        num_ceps = 13,
+                        figsize = (8,4),
+                        title=filePath)
+    print(filePath, "Len = ", len(current_mfcc))
+    features.append(current_mfcc)
+
+# mfcc_vectors is a DICTIONARY like this: {'filename': [feature_vector]}
+# target_vectors are the feature vectors of the target file
+def compute_similarities_api(search_audio_data, search_sample_rate):
+    search_features = calc_plot_mfcc_features(
+                        search_audio_data,
+                        search_sample_rate,
+                        alpha = 0.97,
+                        NFFT=512,
+                        low_freq_cut=10,
+                        nfilt=32,
+                        noise_floor_dB=-100,
+                        frame_size=0.025,
+                        frame_stride=0.02,
+                        num_ceps = 13,
+                        figsize = (8,4),
+                        title=""
+    )
+     
+    feature_vectors = features
+     
+    targetLength = len(search_features)
+    # Truncate feature vectors to the minimum length:
+    feature_vectors = [vec[:targetLength] for vec in feature_vectors]
+    # Pad the feature vectors to the max length:
+    feature_vectors = [np.pad(vec, (0, targetLength - len(vec))) for vec in feature_vectors]
+    
+    similarities = [1 - cosine(search_features, vec2) for vec2 in feature_vectors]
+    # Loop through filepaths by index and associate the same index from similarities dictionary
+    namedSimilarities = {filePaths[i]: similarities[i] for i in range(len(filePaths))}
+    # Sort by descending similarity:
+    namedSimilarities = dict(sorted(namedSimilarities.items(), key=lambda item: item[1], reverse=True))
+    return namedSimilarities
+
+
+
 def compute_similarity_api(search_audio_data, search_sample_rate, target_file_path):
     search_features = calc_plot_mfcc_features(
                         search_audio_data,
@@ -188,7 +256,12 @@ def compute_similarity_api(search_audio_data, search_sample_rate, target_file_pa
     )
     print("Vector lengths", len(search_features), len(target_features))
     similarity = compute_similarity(search_features, target_features)
-    return similarity
+    
+    results = {}
+    results["similarity"] = similarity
+    results["search_results"] = compute_similarities_api(search_audio_data, search_sample_rate)
+    
+    return results
 
 
 search_audio_path = "God1.wav"

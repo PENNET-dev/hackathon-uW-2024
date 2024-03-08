@@ -4,8 +4,6 @@
 - inside elements are centered horizontally and vertically
  */
 .audio-recorder {
-    width: 1in !important;
-    height: 1in;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -15,6 +13,7 @@
     display: flex;
     justify-content: center;
     padding: 1rem;
+    width: 350px;
 }
 
 .App-header {

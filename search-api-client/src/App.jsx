@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import './App.css'
 import Avatar from '@mui/material/Avatar'
 import { useEffect } from 'react'
 import { PlayArrow, Stop } from '@mui/icons-material'
 import { AudioRecorder } from 'react-audio-voice-recorder';
+import { Button, Stack, Typography } from '@mui/material'
 
 
 function App() {
@@ -37,8 +38,56 @@ function App() {
     if (value === null) {
       return null;
     }
-    return `${(value * 100).toFixed(4)}%`
+    return `${(value * 100).toFixed(4)}`
   }
+
+  const [resultsIsMatch, setResultsIsMatch] = useState(false);
+  useEffect(() => {
+    if (results != null) {
+
+      // search_results is a dictionary; find the highest value and store the key in top_result
+      let top_result = Object.keys(results.search_results).reduce((a, b) => results.search_results[a] > results.search_results[b] ? a : b);
+      // console.log("top_result", top_result);
+      top_result = top_result.split('.')[0];
+      // Remove trailing number from top_result with regex:
+      top_result = top_result.replace(/\d+$/, '');
+      // console.log("top_result", top_result);
+
+      // If top result == the selected radio button, set resultsIsMatch to true
+      if (results.similarity > 0.50 || top_result === document.querySelector('input[name="target"]:checked').value) {
+        setResultsIsMatch(true);
+      } else {
+        setResultsIsMatch(false);
+      }
+    }
+  }, [results])
+
+  const [topResults, setTopResults] = useState([]);
+  useEffect(() => {
+    if (results != null) {
+      // Sort the top results dictionary by value and setTopResults
+      let sortedResults = Object.keys(results.search_results).sort((a, b) => results.search_results[b] - results.search_results[a]);
+
+      // For each element in sortedResults, first split on "." then remove the trailing number with regex
+      sortedResults = sortedResults.map((result) => {
+        result = result.split('.')[0];
+        result = result.replace(/\d+$/, '');
+        return result;
+      });
+
+      // Put the keys back in a new dictionary, with the original values:
+      let newResults = {};
+      for (let i = 0; i < sortedResults.length; i++) {
+        newResults[sortedResults[i]] = results.search_results[results.search_results[sortedResults[i]] + "1.wav"];
+      }
+      // console.log("newResults", newResults);
+
+      // console.log("sortedResults", sortedResults);
+      setTopResults(sortedResults);
+    } else {
+      setTopResults([]);
+    }
+  }, [results])
 
   const checkKeywords = async () => {
     // Get the file from the audio input
@@ -51,11 +100,11 @@ function App() {
         resolve(base64data);
       };
       reader.onerror = reject;
-      console.log("audioBlob", audioBlob);
+      // console.log("audioBlob", audioBlob);
       reader.readAsDataURL(audioBlob);
     })
       .then(base64data => {
-        console.log(base64data);
+        // console.log(base64data);
         // Get the target from the radio buttons
         const target = document.querySelector('input[name="target"]:checked').value
 
@@ -71,10 +120,11 @@ function App() {
           body: JSON.stringify(body),
           headers: { 'Content-Type': 'application/json' },
         })
-          .then(response => response.text())
-          .then(data =>
+          .then(response => response.json())
+          .then(data => {
+            // console.log("results", data);
             setResults(data)
-          )
+          })
           .catch(error => console.error('Error:', error));
       });
   }
@@ -89,9 +139,33 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        Keyword checker
+        Keyword Checker
       </header>
       <main>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <input type="radio" id="target1" name="target" value="inTheBeginning" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target1">Beginning</label>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <input type="radio" id="target2" name="target" value="God" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target2">God</label>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <input type="radio" id="target3" name="target" value="jesus" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target3">Jesus</label>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <input type="radio" id="target4" name="target" value="wilderness" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target4">Wilderness</label>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <input type="radio" id="target5" name="target" value="word" style={{ width: '0.5in', height: '0.5in' }} />
+            <label htmlFor="target5">Word</label>
+          </div>
+        </div>
+
         <div className="recorder-container">
           <AudioRecorder
             onRecordingComplete={addAudioElement}
@@ -102,67 +176,45 @@ function App() {
               channelCount: 1,
               sampleRate: 16000,
             }}
-            downloadOnSavePress={true}
+            downloadOnSavePress={false}
             downloadFileExtension="webm"
           />
         </div>
-        {recording &&
-          <div>
-            {/* Show red rectangle with white border that reads "Recording" */}
-            <div style={{
-              width: '100px',
-              height: '50px',
-              backgroundColor: 'red',
-              border: '2px solid white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              Recording
+
+        <div className="centeredFlexbox" style={{ paddingTop: "1rem" }}>
+          <Button variant='contained' type="submit" onClick={checkKeywords}>Search</Button>
+        </div>
+        {results != null &&
+          <Stack sx={{ mt: 3, mb: 0 }} spacing={2} direction="column" display="flex" alignItems="center" justifyContent="center">
+            <div className="centeredFlexbox">
+              {results && resultsIsMatch && <>
+                {/* Add green checkmark emoji inside of Avatar */}
+                <Avatar sx={{ bgcolor: 'green' }}>✔</Avatar>
+              </>}
+              {results && !resultsIsMatch && <>
+                {/* Add red X emoji inside of Avatar */}
+                <Avatar sx={{ bgcolor: 'red' }}>✖</Avatar>
+              </>}
             </div>
-          </div>}
-
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <div>
+              <Typography sx={{ color: "#c0c0c0" }}>Similarity: {formatPercentage(results.similarity)}</Typography>
+            </div>
+          </Stack>}
+        {results != null &&
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target1" name="target" value="target1" style={{ width: '0.5in', height: '0.5in' }} />
-            <label htmlFor="target1">Beginning</label>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target2" name="target" value="target2" style={{ width: '0.5in', height: '0.5in' }} />
-            <label htmlFor="target2">God</label>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target3" name="target" value="target3" style={{ width: '0.5in', height: '0.5in' }} />
-            <label htmlFor="target3">Jesus</label>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target4" name="target" value="target4" style={{ width: '0.5in', height: '0.5in' }} />
-            <label htmlFor="target4">Wilderness</label>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target5" name="target" value="target5" style={{ width: '0.5in', height: '0.5in' }} />
-            <label htmlFor="target5">Word</label>
-          </div>
-        </div>
-        <div className="centeredFlexbox" style={{paddingTop: "1rem"}}>
-          <button type="submit" onClick={checkKeywords}>Search</button>
-        </div>
-        <div className="centeredFlexbox">
-          {Boolean(results) && results >= 0.65 && <>
-            {/* Add green checkmark emoji inside of Avatar */}
-            <Avatar sx={{ bgcolor: 'green' }}>✔</Avatar>
-          </>}
-          {Boolean(results) && results < 0.65 && <>
-            {/* Add red X emoji inside of Avatar */}
-            <Avatar sx={{ bgcolor: 'red' }}>✖</Avatar>
-          </>}
-        </div>
-        <div>
-          <p>Results: {formatPercentage(results)}</p>
-        </div>
-      </main>
-    </div>
+            <Typography variant="h6" sx={{ color: "#505050" }}>Likely Matches:</Typography>
+            {topResults.map((result, index) => {
+              return (<Fragment key={index}>
+                <Typography sx={{ textTransform: "capitalize"}}>
+                {result}
+                {index == 0 && result == document.querySelector('input[name="target"]:checked').value ? " ✔" : ""}
+              </Typography>
+              </Fragment>)
+            }
+            )}
+    </div>}
+      </main >
+    </div >
   )
 }
 
