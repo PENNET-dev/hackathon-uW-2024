@@ -10,15 +10,16 @@ By requiring a "stable" model, we require the solution to be independent of tone
 
 ---
 
-Files:
-`2024_uW_Hackathon_Exploration.ipynb` - Jupyter notebook (Python)
+### Files:
+- `2024_uW_Hackathon_Exploration.ipynb` - Jupyter notebook (Python)
 
-`naiive-feature-extraction.py` - Compare: Off the shelf feature extraction.
-`librosa features.py` - Compare: simple librosa feature extraction.
-`wav2vec.py` - Compare: wav2vec feature extraction.
+- `naiive-feature-extraction.py` - Compare: Off the shelf feature extraction.
+- `librosa features.py` - Compare: simple librosa feature extraction.
+- `wav2vec.py` - Compare: wav2vec feature extraction.
 
-API and Client:
-`host.py` - Flask host for API
-`search-api-client\` - API client (Vite + React)
+### API and Client:
+
+- `host.py` - Flask host for API
+- `search-api-client\` - API client (Vite + React)
 
 .
