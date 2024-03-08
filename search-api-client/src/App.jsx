@@ -54,7 +54,7 @@ function App() {
       // console.log("top_result", top_result);
 
       // If top result == the selected radio button, set resultsIsMatch to true
-      if (results.similarity > 0.50 || top_result === document.querySelector('input[name="target"]:checked').value) {
+      if (results.similarity > 0.50 && top_result === document.querySelector('input[name="target"]:checked').value) {
         setResultsIsMatch(true);
       } else {
         setResultsIsMatch(false);
@@ -111,7 +111,7 @@ function App() {
         // Define the request body
         const body = {
           search_audio_data: base64data,
-          target_file_path: 'God1.wav'
+          target_file_path: target + "1.wav"
         };
 
         // Make the POST request
@@ -145,23 +145,23 @@ function App() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target1" name="target" value="inTheBeginning" style={{ width: '0.5in', height: '0.5in' }} />
+            <input type="radio" onClick={() => { setResults(null) }} id="target1" name="target" value="inTheBeginning" style={{ width: '0.5in', height: '0.5in' }} />
             <label htmlFor="target1">Beginning</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target2" name="target" value="God" style={{ width: '0.5in', height: '0.5in' }} />
+            <input type="radio" onClick={() => { setResults(null) }} id="target2" name="target" value="God" style={{ width: '0.5in', height: '0.5in' }} />
             <label htmlFor="target2">God</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target3" name="target" value="jesus" style={{ width: '0.5in', height: '0.5in' }} />
+            <input type="radio" onClick={() => { setResults(null) }} id="target3" name="target" value="jesus" style={{ width: '0.5in', height: '0.5in' }} />
             <label htmlFor="target3">Jesus</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target4" name="target" value="wilderness" style={{ width: '0.5in', height: '0.5in' }} />
+            <input type="radio" onClick={() => { setResults(null) }} id="target4" name="target" value="wilderness" style={{ width: '0.5in', height: '0.5in' }} />
             <label htmlFor="target4">Wilderness</label>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <input type="radio" id="target5" name="target" value="word" style={{ width: '0.5in', height: '0.5in' }} />
+            <input type="radio" onClick={() => { setResults(null) }} id="target5" name="target" value="word" style={{ width: '0.5in', height: '0.5in' }} />
             <label htmlFor="target5">Word</label>
           </div>
         </div>
@@ -205,14 +205,14 @@ function App() {
             <Typography variant="h6" sx={{ color: "#505050" }}>Likely Matches:</Typography>
             {topResults.map((result, index) => {
               return (<Fragment key={index}>
-                <Typography sx={{ textTransform: "capitalize"}}>
-                {result}
-                {index == 0 && result == document.querySelector('input[name="target"]:checked').value ? " ✔" : ""}
-              </Typography>
+                <Typography sx={{ textTransform: "capitalize" }}>
+                  {result}
+                  {index == 0 && result == document.querySelector('input[name="target"]:checked').value ? " ✔" : ""}
+                </Typography>
               </Fragment>)
             }
             )}
-    </div>}
+          </div>}
       </main >
     </div >
   )
