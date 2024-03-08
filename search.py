@@ -105,21 +105,21 @@ def calc_plot_mfcc_features(audio,
     processed_features = processed_features.tolist()
 
     # Plotting the filter bank matrix
-    plt.figure(figsize=figsize)
-    plt.imshow(filter_banks, aspect='auto', cmap='coolwarm', origin='lower')
-    plt.colorbar(label='Filter Bank Value')
-    plt.xlabel('Frequency Bin')
-    plt.ylabel('Filter Index')
-    plt.title(title+' - Mel Filter Banks')
+    # plt.figure(figsize=figsize)
+    # plt.imshow(filter_banks, aspect='auto', cmap='coolwarm', origin='lower')
+    # plt.colorbar(label='Filter Bank Value')
+    # plt.xlabel('Frequency Bin')
+    # plt.ylabel('Filter Index')
+    # plt.title(title+' - Mel Filter Banks')
 
-    # Plotting the MFCC
-    plt.figure(figsize=figsize)
-    plt.imshow(mfcc, cmap='coolwarm', origin='lower', aspect='auto', extent=[0, 49, 1, 13])
-    plt.colorbar(label='Coefficient Value')
-    plt.xlabel('Frame Index')
-    plt.ylabel('MFCC Coefficient Index')
-    plt.title(title+' - MFCC')
-    # plt.show()
+    # # Plotting the MFCC
+    # plt.figure(figsize=figsize)
+    # plt.imshow(mfcc, cmap='coolwarm', origin='lower', aspect='auto', extent=[0, 49, 1, 13])
+    # plt.colorbar(label='Coefficient Value')
+    # plt.xlabel('Frame Index')
+    # plt.ylabel('MFCC Coefficient Index')
+    # plt.title(title+' - MFCC')
+    # # plt.show()
 
     # Return top 20 MFCCs
     return processed_features[:20]
